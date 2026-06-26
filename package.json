@@ -1,0 +1,41 @@
+{
+  "name": "parsehub-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Stable media parsing API for mini-program clients with provider fallback, Redis cache, quotas, and AI handoff docs.",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "prisma generate && tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f api"
+  },
+  "engines": {
+    "node": ">=20.18.1"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.0.0",
+    "@fastify/helmet": "^13.0.0",
+    "@prisma/client": "^6.18.0",
+    "btch-downloader": "^6.0.36",
+    "fastify": "^5.6.2",
+    "ioredis": "^5.8.1",
+    "jsonwebtoken": "^9.0.2",
+    "zod": "^4.1.12"
+  },
+  "devDependencies": {
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/node": "^24.9.1",
+    "prisma": "^6.18.0",
+    "tsx": "^4.20.6",
+    "typescript": "^6.0.3",
+    "vitest": "^4.0.3"
+  }
+}

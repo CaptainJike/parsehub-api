@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum LedgerType {
+  SIGNUP_BONUS
+  DAILY_FREE_USED
+  AD_REWARD
+  AD_CREDIT_USED
+  PURCHASE
+  PURCHASED_CREDIT_USED
+  ADMIN_ADJUST
+  REFUND
+}
+
+enum ParseStatus {
+  SUCCESS
+  FAILED
+  CACHE_HIT
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  CLOSED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCESS
+  FAILED
+}
+
+model User {
+  id             String             @id @default(cuid())
+  openid         String             @unique
+  unionid        String?
+  nickname       String?
+  avatar         String?
+  status         UserStatus         @default(ACTIVE)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  lastLoginAt    DateTime?
+  quotaAccount   UserQuotaAccount?
+  quotaLedgers   QuotaLedger[]
+  parseRequests  ParseRequest[]
+  adRewardEvents AdRewardEvent[]
+  orders         Order[]
+  refreshTokens  RefreshToken[]
+}
+
+model UserQuotaAccount {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  adCredits        Int       @default(0)
+  purchasedCredits Int       @default(0)
+  memberUntil      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model QuotaLedger {
+  id          String     @id @default(cuid())
+  userId      String
+  type        LedgerType
+  amount      Int
+  balanceType String
+  requestId   String?
+  metadata    Json?
+  createdAt   DateTime   @default(now())
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([requestId])
+}
+
+model ParseRequest {
+  id          String      @id @default(cuid())
+  requestId   String      @unique
+  userId      String
+  platform    String
+  inputHash   String
+  provider    String?
+  status      ParseStatus
+  cacheHit    Boolean     @default(false)
+  quotaUsed   Boolean     @default(false)
+  elapsedMs   Int
+  errorCode   String?
+  errorReason String?
+  createdAt   DateTime    @default(now())
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([platform, inputHash])
+}
+
+model AdRewardEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  clientEventId String
+  rewardAmount  Int
+  status        String
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, clientEventId])
+  @@index([userId, createdAt])
+}
+
+model Product {
+  id               String   @id
+  name             String
+  type             String
+  credits          Int      @default(0)
+  memberDays       Int      @default(0)
+  priceCents       Int
+  enabled          Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  orders           Order[]
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  userId      String
+  productId   String
+  status      OrderStatus @default(PENDING)
+  amountCents Int
+  outTradeNo  String      @unique
+  paidAt      DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product     Product     @relation(fields: [productId], references: [id])
+  payments    Payment[]
+
+  @@index([userId, createdAt])
+}
+
+model Payment {
+  id            String        @id @default(cuid())
+  orderId       String
+  provider      String
+  providerTxnId String?
+  status        PaymentStatus @default(PENDING)
+  rawNotify     Json?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  order         Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([providerTxnId])
+}
+
+model ApiKey {
+  id          String    @id @default(cuid())
+  name        String
+  keyHash     String    @unique
+  status      String    @default("ACTIVE")
+  rateLimit   Int       @default(60)
+  expiresAt   DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastUsedAt  DateTime?
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
