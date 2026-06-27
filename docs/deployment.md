@@ -25,6 +25,8 @@ npm run prisma:migrate
 npm run dev
 ```
 
+`npm run dev` and `npm start` automatically load `.env` through Node.js `process.loadEnvFile()`, so you do not need to pass `NODE_OPTIONS=--env-file=.env` manually.
+
 ## Docker
 
 ```bash

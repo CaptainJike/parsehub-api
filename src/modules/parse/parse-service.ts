@@ -6,7 +6,7 @@ import { getRedis } from '../../shared/redis/client';
 import { consumeFixedWindowLimit } from '../../shared/redis/rate-limit';
 import { prisma } from '../../shared/prisma/client';
 import { sha256 } from '../../shared/security/hash';
-import { assertPublicHttpUrl, normalizeInput } from '../../shared/security/url';
+import { assertPublicHttpUrl, resolveParseInput } from '../../shared/security/url';
 import { consumeParseQuota } from '../quota/quota-service';
 import { detectPlatform, isPlatform, type Platform } from '../providers/platforms';
 import { providerRegistry } from '../providers';
@@ -22,6 +22,7 @@ export interface ParseCommand {
 export interface ParseResult {
   platform: Platform;
   provider?: string;
+  resolvedInput?: string;
   cacheHit: boolean;
   quotaUsed: boolean;
   elapsedMs: number;
@@ -62,8 +63,11 @@ async function withLock<T>(key: string, ttlSeconds: number, fn: () => Promise<T>
 
 export async function parseMedia(command: ParseCommand): Promise<ParseResult> {
   const startedAt = Date.now();
-  const normalizedInput = normalizeInput(command.input);
-  const platform = command.platform === 'auto' ? detectPlatform(normalizedInput) : command.platform;
+  const { normalizedInput, resolvedInput, hasPublicUrl } = resolveParseInput(command.input);
+  const platform =
+    command.platform === 'auto'
+      ? detectPlatform(resolvedInput) ?? (!hasPublicUrl ? detectPlatform(normalizedInput) : null)
+      : command.platform;
 
   if (!platform || !isPlatform(platform)) {
     throw new AppError({
@@ -74,7 +78,7 @@ export async function parseMedia(command: ParseCommand): Promise<ParseResult> {
   }
 
   if (platform !== 'pinterest' && platform !== 'yts') {
-    assertPublicHttpUrl(normalizedInput);
+    assertPublicHttpUrl(resolvedInput);
   }
 
   const userLimit = await consumeFixedWindowLimit(`rate:user:${command.userId}`, 30, 60);
@@ -99,7 +103,7 @@ export async function parseMedia(command: ParseCommand): Promise<ParseResult> {
     }
   }
 
-  const inputHash = sha256(normalizedInput);
+  const inputHash = sha256(resolvedInput);
   const cacheKey = `parse:cache:${platform}:${inputHash}`;
   const cached = await getJsonCache<unknown>(cacheKey);
   if (cached) {
@@ -120,6 +124,7 @@ export async function parseMedia(command: ParseCommand): Promise<ParseResult> {
     return {
       platform,
       provider: 'cache',
+      resolvedInput,
       cacheHit: true,
       quotaUsed: false,
       elapsedMs: Date.now() - startedAt,
@@ -134,6 +139,7 @@ export async function parseMedia(command: ParseCommand): Promise<ParseResult> {
       return {
         platform,
         provider: 'cache',
+        resolvedInput,
         cacheHit: true,
         quotaUsed: false,
         elapsedMs: Date.now() - startedAt,
@@ -146,7 +152,7 @@ export async function parseMedia(command: ParseCommand): Promise<ParseResult> {
     try {
       const providerResult = await providerRegistry.parse({
         platform,
-        input: normalizedInput,
+        input: resolvedInput,
         requestId: command.requestId,
         timeoutMs: env.PROVIDER_TIMEOUT_MS
       });
@@ -170,6 +176,7 @@ export async function parseMedia(command: ParseCommand): Promise<ParseResult> {
       return {
         platform,
         provider: providerResult.provider,
+        resolvedInput,
         cacheHit: false,
         quotaUsed: true,
         elapsedMs: Date.now() - startedAt,

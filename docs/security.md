@@ -16,7 +16,9 @@
 ## Input Validation
 
 - Validate every request with Zod.
+- For parse input, accept either a direct media URL or share text that contains a public `http` or `https` URL.
 - For URL platforms, only allow `http` and `https`.
+- When share text contains multiple links, use the first valid public URL in appearance order.
 - Block `localhost`, private IPs, link-local IPs, and local schemes.
 - Keep input length bounded.
 

@@ -42,6 +42,20 @@ Body:
 
 Returns access token, refresh token, and basic user data.
 
+### `POST /api/v1/auth/refresh`
+
+Body:
+
+```json
+{
+  "refreshToken": "backend refresh token"
+}
+```
+
+Returns a rotated access token and refresh token pair.
+Refresh tokens are single-use after a successful rotation.
+If the refresh token is invalid, expired, revoked, or replayed, the API returns stable code `INVALID_REFRESH_TOKEN`.
+
 ### `GET /api/v1/me`
 
 Requires Bearer token. Returns user profile and quota summary.
@@ -64,8 +78,9 @@ Body:
 ```
 
 `platform` may be `auto` or an enabled platform id.
+`input` may be a direct media URL or copied share text that contains a public `http` or `https` URL.
 
-Returns platform, provider, cache status, quota status, elapsed time, and provider data.
+Returns platform, provider, cache status, quota status, elapsed time, provider data, and an optional `resolvedInput` field containing the exact URL sent to the provider.
 
 ### `POST /api/v1/rewards/ad/claim`
 
@@ -107,3 +122,4 @@ Payment callback endpoint. MVP has a mock branch; production must verify WeChat 
 - Add optional fields only when safe for existing mini-program clients.
 - Use stable `code` values for client behavior.
 - Add `/api/v2` for breaking changes.
+- When parse share text contains multiple links, use the first valid public URL in appearance order.
