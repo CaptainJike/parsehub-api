@@ -1,5 +1,26 @@
 import { z } from 'zod';
 
+function assertSafeProductionCorsOrigins(value: string): void {
+  const origins = value
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+
+  for (const origin of origins) {
+    let parsed: URL;
+    try {
+      parsed = new URL(origin);
+    } catch {
+      throw new Error(`CORS_ORIGINS contains an invalid origin: ${origin}`);
+    }
+
+    const host = parsed.hostname.toLowerCase();
+    if (host === 'localhost' || host === '127.0.0.1' || host === '0.0.0.0') {
+      throw new Error(`CORS_ORIGINS must not include local origins in production: ${origin}`);
+    }
+  }
+}
+
 const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   HOST: z.string().default('0.0.0.0'),
@@ -38,6 +59,8 @@ if (env.NODE_ENV === 'production') {
   if (!env.WECHAT_APP_ID || !env.WECHAT_APP_SECRET) {
     throw new Error('WECHAT_APP_ID and WECHAT_APP_SECRET are required in production.');
   }
+
+  assertSafeProductionCorsOrigins(env.CORS_ORIGINS);
 }
 
 export const corsOrigins = env.CORS_ORIGINS.split(',')
