@@ -25,7 +25,7 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   HOST: z.string().default('0.0.0.0'),
   PORT: z.coerce.number().int().positive().default(3000),
-  DATABASE_URL: z.string().default('postgresql://parsehub:parsehub_password@localhost:5432/parsehub?schema=public'),
+  DATABASE_URL: z.string().default('mysql://parsehub:parsehub_password@localhost:3306/parsehub'),
   REDIS_URL: z.string().default('redis://localhost:6379'),
   JWT_SECRET: z.string().default('development-secret-change-me-32chars'),
   JWT_ISSUER: z.string().default('parsehub-api'),

@@ -11,7 +11,7 @@ This repository is separate from `E:\github\btch-downloader`. Do not add product
 ## Architecture
 
 - Runtime: Node.js 20+, TypeScript, Fastify.
-- Data: PostgreSQL via Prisma.
+- Data: MySQL via Prisma.
 - Cache and control plane: Redis.
 - First parse provider: `btch-downloader`.
 - Provider access must go through `src/modules/providers`.
@@ -55,7 +55,7 @@ npm run docker:down
 ## Local Setup
 
 1. Copy `.env.example` to `.env`.
-2. Start Postgres and Redis with Docker Compose or point env vars to existing services.
+2. Start MySQL and Redis with Docker Compose or point env vars to existing services.
 3. Run `npm install`.
 4. Run `npm run prisma:migrate`.
 5. Run `npm run dev`.
@@ -63,7 +63,7 @@ npm run docker:down
 ## Acceptance Checklist
 
 - `/healthz` returns without database or Redis dependency.
-- `/readyz` checks PostgreSQL and Redis.
+- `/readyz` checks MySQL and Redis.
 - `/api/v1/platforms` lists enabled and disabled platforms.
 - Authenticated `/api/v1/parse` validates input, checks cache, consumes quota, calls Provider, records parse history, and returns the stable response shape.
 - Tests pass before handoff.

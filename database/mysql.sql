@@ -1,3 +1,10 @@
+-- parsehub-api MySQL schema
+-- Generated from prisma/schema.prisma. Run this script against a MySQL 8.0+ server.
+-- The application uses DATABASE_URL to select the same database.
+
+CREATE DATABASE IF NOT EXISTS `parsehub` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE `parsehub`;
+
 -- CreateTable
 CREATE TABLE `User` (
     `id` VARCHAR(191) NOT NULL,
@@ -182,3 +189,4 @@ ALTER TABLE `Payment` ADD CONSTRAINT `Payment_orderId_fkey` FOREIGN KEY (`orderI
 
 -- AddForeignKey
 ALTER TABLE `RefreshToken` ADD CONSTRAINT `RefreshToken_userId_fkey` FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+

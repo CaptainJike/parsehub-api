@@ -16,7 +16,7 @@ Mini Program
       -> ad-rewards
       -> payments
       -> admin
-  -> PostgreSQL
+  -> MySQL
   -> Redis
   -> External parse providers
 ```
@@ -31,7 +31,7 @@ Mini Program
 
 ## Data Stores
 
-- PostgreSQL stores users, quota ledgers, parse records, orders, payment records, ad rewards, API keys, and refresh tokens.
+- MySQL stores users, quota ledgers, parse records, orders, payment records, ad rewards, API keys, and refresh tokens.
 - Redis stores parse cache, rate limits, locks, and provider circuit state.
 
 ## Availability Strategy

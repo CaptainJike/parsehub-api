@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
@@ -43,14 +43,14 @@ enum PaymentStatus {
 }
 
 model User {
-  id             String             @id @default(cuid())
-  openid         String             @unique
+  id             String            @id @default(cuid())
+  openid         String            @unique
   unionid        String?
   nickname       String?
   avatar         String?
-  status         UserStatus         @default(ACTIVE)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
+  status         UserStatus        @default(ACTIVE)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
   lastLoginAt    DateTime?
   quotaAccount   UserQuotaAccount?
   quotaLedgers   QuotaLedger[]
@@ -121,16 +121,16 @@ model AdRewardEvent {
 }
 
 model Product {
-  id               String   @id
-  name             String
-  type             String
-  credits          Int      @default(0)
-  memberDays       Int      @default(0)
-  priceCents       Int
-  enabled          Boolean  @default(true)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-  orders           Order[]
+  id         String   @id
+  name       String
+  type       String
+  credits    Int      @default(0)
+  memberDays Int      @default(0)
+  priceCents Int
+  enabled    Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  orders     Order[]
 }
 
 model Order {
@@ -166,25 +166,25 @@ model Payment {
 }
 
 model ApiKey {
-  id          String    @id @default(cuid())
-  name        String
-  keyHash     String    @unique
-  status      String    @default("ACTIVE")
-  rateLimit   Int       @default(60)
-  expiresAt   DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  lastUsedAt  DateTime?
+  id         String    @id @default(cuid())
+  name       String
+  keyHash    String    @unique
+  status     String    @default("ACTIVE")
+  rateLimit  Int       @default(60)
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  lastUsedAt DateTime?
 }
 
 model RefreshToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  tokenHash String   @unique
+  tokenHash String    @unique
   expiresAt DateTime
   revokedAt DateTime?
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }

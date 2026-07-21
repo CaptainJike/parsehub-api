@@ -26,7 +26,7 @@ Process health check. Does not require database or Redis.
 
 ### `GET /readyz`
 
-Checks PostgreSQL and Redis.
+Checks MySQL and Redis.
 
 ### `POST /api/v1/auth/wechat-login`
 

@@ -6,12 +6,12 @@ services:
     env_file:
       - .env
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-parsehub}:${POSTGRES_PASSWORD:-parsepwd}@postgres:5432/${POSTGRES_DB:-parsehub}?schema=public
+      DATABASE_URL: mysql://${MYSQL_USER:-parsehub}:${MYSQL_PASSWORD:-parsepwd}@mysql:3306/${MYSQL_DATABASE:-parsehub}
       REDIS_URL: redis://redis:6379
     ports:
       - "${API_BIND_IP:-127.0.0.1}:${API_PORT:-3000}:3000"
     depends_on:
-      postgres:
+      mysql:
         condition: service_healthy
       redis:
         condition: service_healthy
@@ -23,19 +23,20 @@ services:
       retries: 10
       start_period: 40s
 
-  postgres:
-    image: postgres:16-alpine
+  mysql:
+    image: mysql:8.4
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-parsehub}
-      POSTGRES_USER: ${POSTGRES_USER:-parsehub}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-parsepwd}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-parsehub}
+      MYSQL_USER: ${MYSQL_USER:-parsehub}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-parsepwd}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-replace-with-strong-mysql-root-password}
     ports:
-      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
     volumes:
-      - parsehub_postgres:/var/lib/postgresql/data
+      - parsehub_mysql:/var/lib/mysql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-parsehub} -d ${POSTGRES_DB:-parsehub}"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u$${MYSQL_USER:-parsehub} -p$${MYSQL_PASSWORD:-parsepwd} --silent"]
       interval: 5s
       timeout: 3s
       retries: 20
@@ -55,5 +56,5 @@ services:
       retries: 20
 
 volumes:
-  parsehub_postgres:
+  parsehub_mysql:
   parsehub_redis:
